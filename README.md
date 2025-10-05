@@ -1,111 +1,117 @@
-Simple Linux Read & Write /proc Driver
-======================================
+Simple Linux /proc Read & Write Kernel Module
+=============================================
 
 This project demonstrates a minimal Linux kernel module that creates a custom file inside the /proc filesystem.
 It supports both read and write operations:
 
-- echo "message" > /proc/my_driver   -> writes a message into the kernel buffer
-- cat /proc/my_driver                -> reads back the same message from kernel space
+  ```
+  echo "message" > /proc/my_driver   # Writes message to the kernel module
+  cat /proc/my_driver                # Reads message back from kernel space
+```
 
+STEP 1: Install Required Packages
+------------
 
--------------------------------------------------
-Step 1: Requirements
--------------------------------------------------
 - Linux kernel 5.15+ (tested on Ubuntu 22.04)
-- Kernel headers installed:
+- Kernel headers:
   
-  sudo apt update
-  sudo apt install build-essential linux-headers-$(uname -r)
+  ```
+    sudo apt update
+    sudo apt install build-essential linux-headers-$(uname -r)
+  ```
+  
 
-- make and gcc toolchain installed
 
--------------------------------------------------
-Step 2: Clone the Repository
--------------------------------------------------
+STEP 2: Clone the Repository
+--------------------
 
-git clone https://github.com/darshilshah7070/linux_read_write_driver.git
-cd my_driver
+    git clone https://github.com/darshilshah7070/linux_read_write_driver.git
+    cd linux_read_write_driver
 
--------------------------------------------------
-Step 3: Build the Driver
--------------------------------------------------
 
-Run:
-  make
+STEP 3: Build the Kernel Module
+----------------
+
+    make
 
 This will generate:
-- my_driver.ko  -> the kernel module
-- my_driver.o   -> object file
-- my_driver.mod* files -> build metadata
+- my_driver.ko       -> the kernel module
+- my_driver.o        -> object file
+- my_driver.mod*     -> build metadata files
 
--------------------------------------------------
-Step 4: Handle Secure Boot (Important!)
--------------------------------------------------
-If Secure Boot is enabled, unsigned modules cannot be loaded.
 
-Solution:
-- Reboot, enter BIOS/UEFI, and disable Secure Boot.
+STEP 4: (Optional) Disable Secure Boot if Needed
+-------------------------------
+
+Note: Secure Boot must be disabled to load unsigned kernel modules.
 
 If you see this error:
-  Lockdown: insmod: unsigned module loading is restricted
-→ Secure Boot is still enabled.
+    Lockdown: insmod: unsigned module loading is restricted
 
--------------------------------------------------
-Step 5: Insert the Module
--------------------------------------------------
+Then:
+    Reboot your system, enter BIOS/UEFI, and disable Secure Boot.
 
-sudo insmod my_driver.ko
-dmesg | tail
 
-Expected message:
-  my_driver: /proc/my_driver created
+STEP 5: Insert the Kernel Module
+------------------------
 
-Check that the file exists:
-  ls -l /proc/my_driver
-
--------------------------------------------------
-Step 6: Write Data into /proc
--------------------------------------------------
-
-echo "Hello from user space!" | sudo tee /proc/my_driver
-
--------------------------------------------------
-Step 7: Read Data Back
--------------------------------------------------
-
-cat /proc/my_driver
+    sudo insmod my_driver.ko
+    dmesg | tail
 
 Expected output:
-  Hello from user space!
 
--------------------------------------------------
-Step 8: Verify Kernel Logs
--------------------------------------------------
+    my_driver: /proc/my_driver created
 
-dmesg | tail
+Check that the file exists:
 
-Example:
-  my_driver: received message: Hello from user space!
+    ls -l /proc/my_driver
 
--------------------------------------------------
-Step 9: Remove the Module
--------------------------------------------------
 
-sudo rmmod my_driver
-dmesg | tail
+STEP 6: Write to /proc Interface
+------------------------
 
-Expected message:
-  my_driver: /proc/my_driver removed
+    echo "Hello from user space!" | sudo tee /proc/my_driver
 
-Check that file is gone:
-  ls /proc/my_driver
-  (should show: No such file or directory)
+STEP 7: Read from /proc Interface
+-------------------------
 
--------------------------------------------------
+    cat /proc/my_driver
+
+Expected output:
+
+    Hello from user space!
+
+
+STEP 8: Check Kernel Logs
+-----------------
+
+    dmesg | tail
+
+Example log:
+
+    my_driver: received message: Hello from user space!
+
+
+STEP 9: Remove the Kernel Module
+-----------------
+
+    sudo rmmod my_driver
+    dmesg | tail
+
+Expected output:
+
+    my_driver: /proc/my_driver removed
+
+Verify removal:
+
+    ls /proc/my_driver
+    # Should say: No such file or directory
+
+
 Summary
--------------------------------------------------
-- "echo" writes a string to kernel space via /proc/my_driver
-- "cat" reads the stored string from kernel space
-- Kernel log (dmesg) shows messages when writing
-- Clean removal deletes /proc/my_driver
+-------
 
+- "echo" writes a string to /proc/my_driver (into kernel space)
+- "cat" reads the stored string from the kernel
+- Kernel logs show each write using dmesg
+- Module can be removed cleanly, deleting the /proc entry
